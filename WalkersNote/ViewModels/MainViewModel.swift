@@ -53,7 +53,7 @@ final class MainViewModel: NSObject, ObservableObject {
                 try await healthStore?.requestAuthorization(toShare: allTypes, read: allTypes)
             }
         } catch {
-            fatalError("An unexpected error occurred while requesting authorization: \(error.localizedDescription) ***")
+            fatalError("An unexpected error occurred while requesting authorization: \(error.localizedDescription)")
         }
     }
     
@@ -61,61 +61,38 @@ final class MainViewModel: NSObject, ObservableObject {
         locationManager.requestWhenInUseAuthorization()
     }
     
+    func getStepCountQuery() -> NSPredicate {
+        let filterManualDataPredicate = NSPredicate(format: "metadata.%K != YES", HKMetadataKeyWasUserEntered) // ref: https://stackoverflow.com/a/52157559
+        
+        let calendar = Calendar(identifier: .gregorian)
+        let startDate = calendar.startOfDay(for: Date())
+        let endDate = calendar.date(byAdding: .day, value: 1, to: startDate)
+        let todayPredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate)
+        
+        let compoundPredicate = NSCompoundPredicate(type: .and, subpredicates: [filterManualDataPredicate, todayPredicate])
+        return compoundPredicate
+    }
     @MainActor func readStepCount() async {
         // Type
         let stepType = HKQuantityType(.stepCount)
         
-        // Predicates
-        let filterManualDataPredicate = NSPredicate(format: "metadata.%K != YES", HKMetadataKeyWasUserEntered) // ref: https://stackoverflow.com/a/52157559
-        
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: Date())
-        let oneDayManualDataPredicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date(), options: .strictStartDate)
-        
-        let compoundPredicate = NSCompoundPredicate(type: .and, subpredicates: [filterManualDataPredicate, oneDayManualDataPredicate])
-        
-        // Create the descriptor.
-        let descriptor = HKSampleQueryDescriptor(
-            predicates: [.quantitySample(type: stepType, predicate: compoundPredicate)],
-            sortDescriptors: [SortDescriptor(\.endDate, order: .reverse)],
-            limit: HKObjectQueryNoLimit)
-        
+        // Query
+        let sumOfStepsQuery = HKStatisticsQueryDescriptor(predicate: .quantitySample(type: stepType, predicate: getStepCountQuery()),
+                                                          options: .cumulativeSum)
         
         // Execute
-        var results: [HKQuantitySample] = []
+        var result: HKStatistics?
         do {
-            results = try await descriptor.result(for: healthStore!)
+            result = try await sumOfStepsQuery.result(for: healthStore!)
         } catch {
             print("An error occured: \(error.localizedDescription)")
         }
         
-        let iphoneCount = results
-            .filter { result in
-                if let model = result.device?.model,
-                   model == "iPhone" {
-                    return true
-                }
-                return false
-            }
-            .reduce(into: 0) { partialResult, result in
-                return partialResult += result.quantity.doubleValue(for: .count())
-            }
-        
-        let watchCount = results
-            .filter { result in
-                if let model = result.device?.model,
-                   model == "Watch" {
-                    return true
-                }
-                return false
-            }
-            .reduce(into: 0) { partialResult, result in
-                return partialResult += result.quantity.doubleValue(for: .count())
-            }
-        
-//        print("iphoneCount=\(iphoneCount) watchCount=\(watchCount)")
-        
-        stepCount = Int(max(iphoneCount, watchCount))
+        // Update
+        if let result = result,
+           let stepCountAsDouble = result.sumQuantity()?.doubleValue(for: .count()) {
+            stepCount = Int(stepCountAsDouble)
+        }
     }
 }
 
