@@ -47,6 +47,7 @@ final class MainViewModel: NSObject, ObservableObject {
     @Published var cameraPosition: MapCameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: fallbackCoordinator, latitudinalMeters: 200, longitudinalMeters: 200))
     @Published var stepCount: Int = 0
     @Published var currentAddress: String = ""
+    @Published var coreLocationUnauthorized: Bool = false
     
     override init () {
         locationManager = CLLocationManager()
@@ -153,6 +154,8 @@ extension MainViewModel: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         if manager.authorizationStatus == .authorizedWhenInUse {
             updateLocation(to: manager.location)
+        } else if manager.authorizationStatus == .denied {
+            coreLocationUnauthorized = true
         }
     }
     

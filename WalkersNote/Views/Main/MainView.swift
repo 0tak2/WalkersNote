@@ -31,7 +31,8 @@ struct MainView: View {
                     .padding(16)
             }
             
-            if viewModel.currentLocation == nil {
+            if viewModel.currentLocation == nil
+               && viewModel.coreLocationUnauthorized {
                 ToastMessageView(message: "위치를 알 수 없습니다.\n설정 - 앱 - 산책자노트에서 위치 권한을 확인해주세요.")
             }
         }
