@@ -13,19 +13,21 @@ import CoreMotion
 final class MainViewModel: NSObject, ObservableObject {
     private let locationManager: CLLocationManager
     private static let fallbackCoordinator = CLLocationCoordinate2D(latitude: 37.571648599, longitude: 126.976372775)
-    private static let spanMeters = 200.0
+    private var cameraPositionPreapred = false
     
     private let pedometer = CMPedometer()
     
     @Published var currentLocation: CLLocation? {
         didSet {
-            if let currentLocation = currentLocation  {
-                cameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: currentLocation.coordinate, latitudinalMeters: MainViewModel.spanMeters, longitudinalMeters: MainViewModel.spanMeters))
+            if !cameraPositionPreapred,
+               let currentLocation = currentLocation {
+                cameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: currentLocation.coordinate, latitudinalMeters: 200, longitudinalMeters: 200))
+                cameraPositionPreapred.toggle()
             }
         }
     }
     
-    @Published var cameraPosition: MapCameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: fallbackCoordinator, latitudinalMeters: spanMeters, longitudinalMeters: spanMeters))
+    @Published var cameraPosition: MapCameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: fallbackCoordinator, latitudinalMeters: 200, longitudinalMeters: 200))
     
     @Published var stepCount: Int = 0
     
@@ -76,11 +78,9 @@ final class MainViewModel: NSObject, ObservableObject {
     }
     
     func updateLocation(to location: CLLocation?) {
-        guard let location = location else {
-            return
-        }
-        
         currentLocation = location
+        
+        guard let location = location else { return }
         
         Task { @MainActor in
             let geocoder = CLGeocoder()
