@@ -27,6 +27,10 @@ struct MainView: View {
                 
                 Spacer()
             }
+            
+            if viewModel.currentLocation == nil {
+                ToastMessageView(message: "위치를 알 수 없습니다.\n설정 - 앱 - 산책자노트에서 위치 권한을 확인해주세요.")
+            }
         }
         .onAppear {
             viewModel.viewAppeared()
