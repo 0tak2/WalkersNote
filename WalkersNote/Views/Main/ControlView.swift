@@ -20,6 +20,7 @@ struct ControlView: View {
                 Image(systemName: "location.circle.fill")
                     .resizable()
                     .frame(width: 36, height: 36)
+                    .foregroundStyle(.orange)
                     .background(.white)
             }
             .clipShape(.circle)

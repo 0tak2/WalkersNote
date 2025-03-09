@@ -38,6 +38,7 @@ struct HeaderView: View {
                         print("chart button tapped")
                     } label: {
                         Image(systemName: "chart.bar.fill")
+                            .foregroundStyle(.black)
                     }
 
                     Spacer()
@@ -46,6 +47,7 @@ struct HeaderView: View {
                         print("setting button tapped")
                     } label: {
                         Image(systemName: "gearshape.fill")
+                            .foregroundStyle(.black)
                     }
                 }
             }
