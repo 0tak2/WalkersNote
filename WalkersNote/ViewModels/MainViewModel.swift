@@ -15,7 +15,7 @@ final class MainViewModel: NSObject, ObservableObject {
     private static let fallbackCoordinator = CLLocationCoordinate2D(latitude: 37.571648599, longitude: 126.976372775)
     private static let spanMeters = 200.0
     
-    private var motionManager = CMMotionManager()
+    private let pedometer = CMPedometer()
     
     @Published var currentLocation: CLLocation? {
         didSet {
@@ -34,7 +34,29 @@ final class MainViewModel: NSObject, ObservableObject {
         super.init()
         
         locationManager.delegate = self
+        
+        if CMPedometer.isStepCountingAvailable() {
+            getTodayStepCount()
+        }
+        
+        startIntervalJob()
     }
+    
+    private func getTodayStepCount() {
+        pedometer.startUpdates(from: Calendar.current.startOfDay(for: Date()), withHandler: { [weak self] (data, error) in
+            if let error = error {
+                print("Error occured during getting step count: \(error.localizedDescription)")
+            }
+            
+            if let stepData = data {
+                let steps = stepData.numberOfSteps.stringValue
+                DispatchQueue.main.async {
+                    self?.stepCount = Int(steps) ?? 0
+                }
+            }
+        })
+    }
+
     
     func viewAppeared() {
         locationManager.requestWhenInUseAuthorization()
