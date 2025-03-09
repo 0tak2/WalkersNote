@@ -8,14 +8,14 @@
 import SwiftUI
 import MapKit
 import CoreLocation
-import HealthKit
+import CoreMotion
 
 final class MainViewModel: NSObject, ObservableObject {
     private let locationManager: CLLocationManager
     private static let fallbackCoordinator = CLLocationCoordinate2D(latitude: 37.571648599, longitude: 126.976372775)
     private static let spanMeters = 200.0
     
-    private var healthStore: HKHealthStore?
+    private var motionManager = CMMotionManager()
     
     @Published var currentLocation: CLLocation? {
         didSet {
@@ -34,44 +34,10 @@ final class MainViewModel: NSObject, ObservableObject {
         super.init()
         
         locationManager.delegate = self
-        
-        Task { @MainActor in
-            await initHealthStore()
-            await readStepCount()
-            startObservingStepCountTimer()
-        }
-    }
-    
-    func initHealthStore() async {
-        let allTypes: Set = [
-            HKQuantityType(.distanceWalkingRunning),
-            HKQuantityType(.stepCount)
-        ]
-        
-        do {
-            if HKHealthStore.isHealthDataAvailable() {
-                healthStore = HKHealthStore()
-                try await healthStore?.requestAuthorization(toShare: allTypes, read: allTypes)
-            }
-        } catch {
-            fatalError("An unexpected error occurred while requesting authorization: \(error.localizedDescription)")
-        }
     }
     
     func viewAppeared() {
         locationManager.requestWhenInUseAuthorization()
-    }
-    
-    func getStepCountQuery() -> NSPredicate {
-        let filterManualDataPredicate = NSPredicate(format: "metadata.%K != YES", HKMetadataKeyWasUserEntered) // ref: https://stackoverflow.com/a/52157559
-        
-        let calendar = Calendar(identifier: .gregorian)
-        let startDate = calendar.startOfDay(for: Date())
-        let endDate = calendar.date(byAdding: .day, value: 1, to: startDate)
-        let todayPredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate)
-        
-        let compoundPredicate = NSCompoundPredicate(type: .and, subpredicates: [filterManualDataPredicate, todayPredicate])
-        return compoundPredicate
     }
     
     func startIntervalJob() {
@@ -80,34 +46,11 @@ final class MainViewModel: NSObject, ObservableObject {
     
     @objc func timerHandler() {
         Task { @MainActor in
-            print("update step count...")
-            await readStepCount()
             print("timer invoked...")
             updateLocation()
         }
     }
     
-    @MainActor func readStepCount() async {
-        // Type
-        let stepType = HKQuantityType(.stepCount)
-        
-        // Query
-        let sumOfStepsQuery = HKStatisticsQueryDescriptor(predicate: .quantitySample(type: stepType, predicate: getStepCountQuery()),
-                                                          options: .cumulativeSum)
-        
-        // Execute
-        var result: HKStatistics?
-        do {
-            result = try await sumOfStepsQuery.result(for: healthStore!)
-        } catch {
-            print("An error occured: \(error.localizedDescription)")
-        }
-        
-        // Update
-        if let result = result,
-           let stepCountAsDouble = result.sumQuantity()?.doubleValue(for: .count()) {
-            stepCount = Int(stepCountAsDouble)
-        }
     @MainActor func updateLocation() {
         currentLocation = locationManager.location
     }

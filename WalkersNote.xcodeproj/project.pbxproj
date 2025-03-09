@@ -400,8 +400,6 @@
 				DEVELOPMENT_TEAM = XS9UN8F2AX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "걸음 수 수집을 위해 건강 데이터를 참조합니다.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "걸음 수 수집을 위해 건강 데이터를 참조합니다.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "지도 표시 및 메모 저장을 위해 현재 위치에 접근합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -433,8 +431,6 @@
 				DEVELOPMENT_TEAM = XS9UN8F2AX;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "걸음 수 수집을 위해 건강 데이터를 참조합니다.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "걸음 수 수집을 위해 건강 데이터를 참조합니다.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "지도 표시 및 메모 저장을 위해 현재 위치에 접근합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
