@@ -14,7 +14,12 @@ struct MainView: View {
     
     var body: some View {
         ZStack {
-            Map(position: $viewModel.cameraPosition)
+            Map(position: $viewModel.cameraPosition) {
+                if let currentLocation = viewModel.currentLocation {
+                    Marker("현재 위치", systemImage: "circle.circle", coordinate: currentLocation.coordinate)
+                }
+            }
+            
             VStack {
                 HeaderView(viewModel: viewModel)
                     .frame(height: 136)
