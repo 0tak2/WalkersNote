@@ -28,7 +28,7 @@ struct HeaderView: View {
                 
                 Spacer()
                 
-                Text("1234")
+                Text("\(viewModel.stepCount)")
                     .font(.big)
                 
                 Spacer()
