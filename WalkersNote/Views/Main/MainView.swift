@@ -26,6 +26,9 @@ struct MainView: View {
                     .padding(.init(top: 16, leading: 16, bottom: 0, trailing: 16))
                 
                 Spacer()
+                
+                ControlView(viewModel: viewModel)
+                    .padding(16)
             }
             
             if viewModel.currentLocation == nil {

@@ -90,6 +90,12 @@ final class MainViewModel: NSObject, ObservableObject {
             }
         }
     }
+    
+    func locationButtonTapped() {
+        if let currentLocation = currentLocation {
+            cameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: currentLocation.coordinate, latitudinalMeters: 200, longitudinalMeters: 200))
+        }
+    }
 }
 
 extension MainViewModel: CLLocationManagerDelegate {
