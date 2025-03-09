@@ -29,6 +29,8 @@ final class MainViewModel: NSObject, ObservableObject {
     
     @Published var stepCount: Int = 0
     
+    @Published var currentAddress: String = ""
+    
     override init () {
         locationManager = CLLocationManager()
         super.init()
@@ -69,25 +71,37 @@ final class MainViewModel: NSObject, ObservableObject {
     @objc func timerHandler() {
         Task { @MainActor in
             print("timer invoked...")
-            updateLocation()
+            updateLocation(to: locationManager.location)
         }
     }
     
-    @MainActor func updateLocation() {
-        currentLocation = locationManager.location
+    func updateLocation(to location: CLLocation?) {
+        guard let location = location else {
+            return
+        }
+        
+        currentLocation = location
+        
+        Task { @MainActor in
+            let geocoder = CLGeocoder()
+            let placemarks = try? await geocoder.reverseGeocodeLocation(location)
+            if let placemark = placemarks?.first {
+                currentAddress = "\(placemark.locality ?? "") \(placemark.thoroughfare ?? "")"
+            }
+        }
     }
 }
 
 extension MainViewModel: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         if manager.authorizationStatus == .authorizedWhenInUse {
-            currentLocation = manager.location
+            updateLocation(to: manager.location)
         }
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let location = locations.last {
-            currentLocation = location
+            updateLocation(to: location)
         }
     }
 }

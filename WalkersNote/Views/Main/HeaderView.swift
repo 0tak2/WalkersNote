@@ -17,7 +17,7 @@ struct HeaderView: View {
             
             VStack {
                 HStack {
-                    Text("포항시 지곡동")
+                    Text(viewModel.currentAddress)
                         .font(.body)
                     Spacer()
                     Image(systemName: "sun.min")
