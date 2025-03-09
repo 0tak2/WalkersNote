@@ -74,7 +74,7 @@ final class MainViewModel: NSObject, ObservableObject {
         return compoundPredicate
     }
     
-    func startObservingStepCountTimer() {
+    func startIntervalJob() {
         Timer.scheduledTimer(timeInterval: 10.0, target: self, selector: #selector(timerHandler), userInfo: nil, repeats: true)
     }
     
@@ -82,6 +82,8 @@ final class MainViewModel: NSObject, ObservableObject {
         Task { @MainActor in
             print("update step count...")
             await readStepCount()
+            print("timer invoked...")
+            updateLocation()
         }
     }
     
@@ -106,6 +108,8 @@ final class MainViewModel: NSObject, ObservableObject {
            let stepCountAsDouble = result.sumQuantity()?.doubleValue(for: .count()) {
             stepCount = Int(stepCountAsDouble)
         }
+    @MainActor func updateLocation() {
+        currentLocation = locationManager.location
     }
 }
 
