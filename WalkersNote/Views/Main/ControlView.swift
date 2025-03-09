@@ -30,4 +30,5 @@ struct ControlView: View {
 
 #Preview {
     ControlView(viewModel: MainViewModel())
+        .padding(16)
 }
