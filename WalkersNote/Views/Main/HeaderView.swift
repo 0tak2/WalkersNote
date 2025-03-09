@@ -7,7 +7,9 @@
 
 import SwiftUI
 
-struct CounterView: View {
+struct HeaderView: View {
+    @ObservedObject var viewModel: MainViewModel
+    
     var body: some View {
         ZStack {
             Rectangle()
@@ -19,6 +21,7 @@ struct CounterView: View {
                         .font(.body)
                     Spacer()
                     Image(systemName: "sun.min")
+                        .foregroundStyle(.yellow)
                     Text("13°C")
                         .font(.body)
                 }
@@ -31,9 +34,19 @@ struct CounterView: View {
                 Spacer()
                 
                 HStack {
-                    Image(systemName: "chart.bar.fill")
+                    Button {
+                        print("chart button tapped")
+                    } label: {
+                        Image(systemName: "chart.bar.fill")
+                    }
+
                     Spacer()
-                    Image(systemName: "gearshape.fill")
+                    
+                    Button {
+                        print("setting button tapped")
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                    }
                 }
             }
             .padding(8)
@@ -43,5 +56,5 @@ struct CounterView: View {
 }
 
 #Preview {
-    CounterView()
+    HeaderView(viewModel: MainViewModel())
 }

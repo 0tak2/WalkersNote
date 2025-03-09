@@ -16,7 +16,7 @@ struct MainView: View {
         ZStack {
             Map(position: $viewModel.cameraPosition)
             VStack {
-                CounterView()
+                HeaderView(viewModel: viewModel)
                     .frame(height: 136)
                     .padding(.init(top: 16, leading: 16, bottom: 0, trailing: 16))
                 
