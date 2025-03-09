@@ -38,6 +38,7 @@ final class MainViewModel: NSObject, ObservableObject {
         Task { @MainActor in
             await initHealthStore()
             await readStepCount()
+            startObservingStepCountTimer()
         }
     }
     
@@ -72,6 +73,18 @@ final class MainViewModel: NSObject, ObservableObject {
         let compoundPredicate = NSCompoundPredicate(type: .and, subpredicates: [filterManualDataPredicate, todayPredicate])
         return compoundPredicate
     }
+    
+    func startObservingStepCountTimer() {
+        Timer.scheduledTimer(timeInterval: 10.0, target: self, selector: #selector(timerHandler), userInfo: nil, repeats: true)
+    }
+    
+    @objc func timerHandler() {
+        Task { @MainActor in
+            print("update step count...")
+            await readStepCount()
+        }
+    }
+    
     @MainActor func readStepCount() async {
         // Type
         let stepType = HKQuantityType(.stepCount)
