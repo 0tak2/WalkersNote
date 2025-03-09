@@ -9,6 +9,7 @@ import SwiftUI
 import MapKit
 import CoreLocation
 import CoreMotion
+import WeatherKit
 
 final class MainViewModel: NSObject, ObservableObject {
     private let locationManager: CLLocationManager
@@ -16,6 +17,23 @@ final class MainViewModel: NSObject, ObservableObject {
     private var cameraPositionPreapred = false
     
     private let pedometer = CMPedometer()
+    
+    private let weatherService = WeatherService.shared
+    private var lastWeatherFor: CLLocation?
+    @Published var lastWeather: Weather? {
+        didSet {
+            guard let currentWeather = lastWeather?.currentWeather else { return }
+            
+            let roundedTemp = Int(round(currentWeather.temperature.value * 10) / 10)
+            
+            temperatureLabelText = "\(roundedTemp)\(currentWeather.temperature.unit.symbol)"
+        }
+    }
+    @Published var temperatureLabelText: String = ""
+    @Published var weatherKitLegalUrl: URL?
+    @Published var weatherKitLightImageUrl: URL?
+    @Published var weatherKitDarkImageUrl: URL?
+    @Published var showWeatherKitLegalPage: Bool = false
     
     @Published var currentLocation: CLLocation? {
         didSet {
@@ -26,11 +44,8 @@ final class MainViewModel: NSObject, ObservableObject {
             }
         }
     }
-    
     @Published var cameraPosition: MapCameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: fallbackCoordinator, latitudinalMeters: 200, longitudinalMeters: 200))
-    
     @Published var stepCount: Int = 0
-    
     @Published var currentAddress: String = ""
     
     override init () {
@@ -44,6 +59,13 @@ final class MainViewModel: NSObject, ObservableObject {
         }
         
         startIntervalJob()
+        
+        Task { @MainActor in
+            let weatherKitAttribution = try? await weatherService.attribution
+            weatherKitLightImageUrl = weatherKitAttribution?.combinedMarkLightURL
+            weatherKitDarkImageUrl = weatherKitAttribution?.combinedMarkDarkURL
+            weatherKitLegalUrl = weatherKitAttribution?.legalPageURL
+        }
     }
     
     private func getTodayStepCount() {
@@ -88,6 +110,31 @@ final class MainViewModel: NSObject, ObservableObject {
             if let placemark = placemarks?.first {
                 currentAddress = "\(placemark.locality ?? "") \(placemark.thoroughfare ?? "")"
             }
+            
+            var needToUpdateWeather: Bool = false
+            if let lastWeatherFor = lastWeatherFor,
+               let lastWeather = lastWeather { // 이전에 업데이트 됨
+                if location.distance(from: lastWeatherFor) > 1000
+                    || lastWeather.currentWeather.metadata.expirationDate < Date() { // 1km 이상 떨어진 지역이거나 만료된 날씨
+//                    print("distance: \(location.distance(from: lastWeatherFor))")
+//                    print("expiration: \(lastWeather.currentWeather.metadata.expirationDate), now: \(Date())")
+                    needToUpdateWeather = true
+                }
+            } else { // 최초 업데이트
+                needToUpdateWeather = true
+            }
+            
+            guard needToUpdateWeather else {
+                print("skip update weather.")
+                return
+            }
+            
+            do {
+                lastWeather = try await weatherService.weather(for: location)
+                lastWeatherFor = currentLocation
+            } catch {
+                print("An error occured during fetch weather... \(error.localizedDescription)")
+            }
         }
     }
     
@@ -95,6 +142,10 @@ final class MainViewModel: NSObject, ObservableObject {
         if let currentLocation = currentLocation {
             cameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: currentLocation.coordinate, latitudinalMeters: 200, longitudinalMeters: 200))
         }
+    }
+    
+    func weatherImageTapped() {
+        showWeatherKitLegalPage = true
     }
 }
 

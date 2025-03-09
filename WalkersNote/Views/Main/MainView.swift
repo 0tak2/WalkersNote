@@ -38,6 +38,9 @@ struct MainView: View {
         .onAppear {
             viewModel.viewAppeared()
         }
+        .sheet(isPresented: $viewModel.showWeatherKitLegalPage) {
+            SafariView(url: viewModel.weatherKitLegalUrl!)
+        }
     }
 }
 

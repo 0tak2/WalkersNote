@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HeaderView: View {
     @ObservedObject var viewModel: MainViewModel
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         ZStack {
@@ -19,12 +20,30 @@ struct HeaderView: View {
                 HStack {
                     Text(viewModel.currentAddress)
                         .font(.body)
+                    
                     Spacer()
-                    Image(systemName: "sun.min")
-                        .foregroundStyle(.yellow)
-                    Text("13°C")
+                    
+                    let currentWeather = viewModel.lastWeather?.currentWeather
+                    Image(systemName: currentWeather?.condition.imageName ?? "questionmark")
+                        .foregroundStyle(currentWeather?.condition.imageColor ?? .white)
+                    
+                    Text(viewModel.temperatureLabelText)
                         .font(.body)
                 }
+                
+                if let weatherKitLightImageUrl = viewModel.weatherKitLightImageUrl,
+                   let weatherKitDarkImageUrl = viewModel.weatherKitDarkImageUrl {
+                    let imageUrl = colorScheme == .light ? weatherKitLightImageUrl : weatherKitDarkImageUrl
+                    
+                    HStack {
+                        Spacer()
+                        fetchImage(url: imageUrl.absoluteString)
+                            .onTapGesture {
+                                viewModel.weatherImageTapped()
+                            }
+                    }
+                }
+                
                 
                 Spacer()
                 
@@ -54,6 +73,18 @@ struct HeaderView: View {
             .padding(8)
         }
         .clipShape(.rect(cornerRadius: 8, style: .continuous))
+    }
+    
+    
+    func fetchImage(url: String) -> some View {
+        AsyncImage(url: URL(string: url)) { image in
+            image
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(height: 12)
+        } placeholder: {
+            ProgressView()
+        }
     }
 }
 
