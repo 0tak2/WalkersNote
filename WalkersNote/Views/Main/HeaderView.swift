@@ -50,9 +50,8 @@ struct HeaderView: View {
                     }
                 }
             }
-            .padding(8)
+            .padding(16)
         }
-        .clipShape(.rect(cornerRadius: 8, style: .continuous))
     }
     
     
