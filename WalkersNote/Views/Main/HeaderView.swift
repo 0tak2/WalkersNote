@@ -13,44 +13,24 @@ struct HeaderView: View {
     
     var body: some View {
         ZStack {
-            Rectangle()
-                .fill(Color.primary.opacity(0.7))
+            backgroundView()
             
             VStack {
-                HStack {
-                    Text(viewModel.currentAddress)
-                        .font(.body)
-                    
-                    Spacer()
-                    
-                    let currentWeather = viewModel.lastWeather?.currentWeather
-                    Image(systemName: currentWeather?.condition.imageName ?? "questionmark")
-                        .foregroundStyle(currentWeather?.condition.imageColor ?? .white)
-                    
-                    Text(viewModel.temperatureLabelText)
-                        .font(.body)
-                }
+                headlineHStack()
                 
-                if let weatherKitLightImageUrl = viewModel.weatherKitLightImageUrl,
-                   let weatherKitDarkImageUrl = viewModel.weatherKitDarkImageUrl {
-                    let imageUrl = colorScheme == .light ? weatherKitLightImageUrl : weatherKitDarkImageUrl
-                    
-                    HStack {
-                        Spacer()
-                        fetchImage(url: imageUrl.absoluteString)
-                            .onTapGesture {
-                                viewModel.weatherImageTapped()
-                            }
-                    }
-                }
-                
+                weatherKitAttributesview()
                 
                 Spacer()
+                    .frame(height: 16)
                 
-                Text("\(viewModel.stepCount)")
-                    .font(.big)
+                withAnimation {
+                    Text(String(viewModel.stepCount))
+                        .font(.big)
+                        .monospaced()
+                }
                 
                 Spacer()
+                    .frame(height: 24)
                 
                 HStack {
                     Button {
@@ -59,7 +39,7 @@ struct HeaderView: View {
                         Image(systemName: "chart.bar.fill")
                             .foregroundStyle(.black)
                     }
-
+                    
                     Spacer()
                     
                     Button {
@@ -84,6 +64,44 @@ struct HeaderView: View {
                 .frame(height: 12)
         } placeholder: {
             ProgressView()
+        }
+    }
+    
+    func backgroundView() -> some View {
+        RoundedRectangle(cornerSize: .init(width: 8, height: 8), style: .continuous)
+            .fill(Color.primary)
+            .opacity(0.8)
+            .shadow(radius: 16)
+    }
+    
+    func headlineHStack() -> some View {
+        HStack {
+            Text(viewModel.currentAddress)
+            
+            Spacer()
+            
+            let currentWeather = viewModel.lastWeather?.currentWeather
+            Image(systemName: currentWeather?.condition.imageName ?? "questionmark")
+                .foregroundStyle(currentWeather?.condition.imageColor ?? .white)
+            
+            Text(viewModel.temperatureLabelText)
+        }
+        .font(.system(size: 16, weight: .bold))
+    }
+    
+    @ViewBuilder
+    func weatherKitAttributesview() -> some View {
+        if let weatherKitLightImageUrl = viewModel.weatherKitLightImageUrl,
+           let weatherKitDarkImageUrl = viewModel.weatherKitDarkImageUrl {
+            let imageUrl = colorScheme == .light ? weatherKitLightImageUrl : weatherKitDarkImageUrl
+            
+            HStack {
+                Spacer()
+                fetchImage(url: imageUrl.absoluteString)
+                    .onTapGesture {
+                        viewModel.weatherImageTapped()
+                    }
+            }
         }
     }
 }
