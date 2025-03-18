@@ -49,6 +49,8 @@ final class MainViewModel: NSObject, ObservableObject {
     @Published var currentAddress: String = ""
     @Published var coreLocationUnauthorized: Bool = false
     
+    @Published var presentBottomSheet: Bool = false
+    
     override init () {
         locationManager = CLLocationManager()
         super.init()
