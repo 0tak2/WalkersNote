@@ -20,6 +20,9 @@ struct MainView: View {
                     Marker("현재 위치", systemImage: "circle.circle", coordinate: currentLocation.coordinate)
                 }
             }
+            .onMapCameraChange {
+                viewModel.currentCameraSpan = $0.region.span
+            }
             
             VStack {
                 HeaderView(viewModel: viewModel)

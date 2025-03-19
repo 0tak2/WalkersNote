@@ -39,12 +39,13 @@ final class MainViewModel: NSObject, ObservableObject {
         didSet {
             if !cameraPositionPreapred,
                let currentLocation = currentLocation {
-                cameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: currentLocation.coordinate, latitudinalMeters: 200, longitudinalMeters: 200))
+                cameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: currentLocation.coordinate, span: currentCameraSpan))
                 cameraPositionPreapred.toggle()
             }
         }
     }
     @Published var cameraPosition: MapCameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: fallbackCoordinator, latitudinalMeters: 200, longitudinalMeters: 200))
+    @Published var currentCameraSpan = MKCoordinateSpan(latitudeDelta: 0.002, longitudeDelta: 0.002)
     @Published var stepCount: Int = 0
     @Published var currentAddress: String = ""
     @Published var coreLocationUnauthorized: Bool = false
@@ -154,7 +155,7 @@ final class MainViewModel: NSObject, ObservableObject {
     
     func locationButtonTapped() {
         if let currentLocation = currentLocation {
-            cameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: currentLocation.coordinate, latitudinalMeters: 200, longitudinalMeters: 200))
+            cameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: currentLocation.coordinate, span: currentCameraSpan))
         }
     }
     
