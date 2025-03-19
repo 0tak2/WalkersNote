@@ -85,24 +85,19 @@ final class MainViewModel: NSObject, ObservableObject {
             }
         })
     }
-
     
-    func viewAppeared() {
-        locationManager.requestWhenInUseAuthorization()
-    }
-    
-    func startIntervalJob() {
+    private func startIntervalJob() {
         Timer.scheduledTimer(timeInterval: 10.0, target: self, selector: #selector(timerHandler), userInfo: nil, repeats: true)
     }
     
-    @objc func timerHandler() {
+    @objc private func timerHandler() {
         Task { @MainActor in
             print("timer invoked...")
             updateLocation(to: locationManager.location)
         }
     }
     
-    func updateLocation(to location: CLLocation?) {
+    private func updateLocation(to location: CLLocation?) {
         currentLocation = location
         
         guard let location = location else { return }
@@ -151,6 +146,10 @@ final class MainViewModel: NSObject, ObservableObject {
         } catch {
             print("An error occured during fetch weather... \(error.localizedDescription)")
         }
+    }
+    
+    func viewAppeared() {
+        locationManager.requestWhenInUseAuthorization()
     }
     
     func locationButtonTapped() {
