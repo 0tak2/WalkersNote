@@ -30,11 +30,15 @@ struct MainView: View {
                 
                 ControlView(viewModel: viewModel)
                     .padding(16)
+                    .padding(
+                        .bottom,
+                        viewModel.presentBottomSheet
+                        ? UIScreen.main.bounds.height * bottomSheetHeightRatio
+                        : 0
+                    )
+                    .animation(.bouncy, value: viewModel.presentBottomSheet)
                 
-                if viewModel.presentBottomSheet {
-                    Spacer()
-                        .frame(height: UIScreen.main.bounds.height * bottomSheetHeightRatio)
-                } else {
+                if !viewModel.presentBottomSheet {
                     bottomSheetHandleView
                 }
             }
