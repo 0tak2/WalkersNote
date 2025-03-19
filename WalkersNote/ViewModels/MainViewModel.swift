@@ -107,37 +107,49 @@ final class MainViewModel: NSObject, ObservableObject {
         
         guard let location = location else { return }
         
-        Task { @MainActor in
-            let geocoder = CLGeocoder()
-            let placemarks = try? await geocoder.reverseGeocodeLocation(location)
-            if let placemark = placemarks?.first {
+        Task {
+            await updateAddress(location)
+            await updateWeather(location)
+        }
+    }
+    
+    private func updateAddress(_ location: CLLocation) async {
+        let geocoder = CLGeocoder()
+        let placemarks = try? await geocoder.reverseGeocodeLocation(location)
+        if let placemark = placemarks?.first {
+            await MainActor.run {
                 currentAddress = "\(placemark.locality ?? "") \(placemark.thoroughfare ?? "")"
             }
-            
-            var needToUpdateWeather: Bool = false
-            if let lastWeatherFor = lastWeatherFor,
-               let lastWeather = lastWeather { // 이전에 업데이트 됨
-                if location.distance(from: lastWeatherFor) > 1000
-                    || lastWeather.currentWeather.metadata.expirationDate < Date() { // 1km 이상 떨어진 지역이거나 만료된 날씨
+        }
+    }
+    
+    private func updateWeather(_ location: CLLocation) async {
+        var needToUpdateWeather: Bool = false
+        if let lastWeatherFor = lastWeatherFor,
+           let lastWeather = lastWeather { // 이전에 업데이트 됨
+            if location.distance(from: lastWeatherFor) > 1000
+                || lastWeather.currentWeather.metadata.expirationDate < Date() { // 1km 이상 떨어진 지역이거나 만료된 날씨
 //                    print("distance: \(location.distance(from: lastWeatherFor))")
 //                    print("expiration: \(lastWeather.currentWeather.metadata.expirationDate), now: \(Date())")
-                    needToUpdateWeather = true
-                }
-            } else { // 최초 업데이트
                 needToUpdateWeather = true
             }
-            
-            guard needToUpdateWeather else {
-                print("skip update weather.")
-                return
+        } else { // 최초 업데이트
+            needToUpdateWeather = true
+        }
+        
+        guard needToUpdateWeather else {
+            print("skip update weather.")
+            return
+        }
+        
+        do {
+            let weather = try await weatherService.weather(for: location)
+            await MainActor.run {
+                lastWeather = weather
             }
-            
-            do {
-                lastWeather = try await weatherService.weather(for: location)
-                lastWeatherFor = currentLocation
-            } catch {
-                print("An error occured during fetch weather... \(error.localizedDescription)")
-            }
+            lastWeatherFor = currentLocation
+        } catch {
+            print("An error occured during fetch weather... \(error.localizedDescription)")
         }
     }
     
