@@ -8,27 +8,27 @@
 import SwiftUI
 
 struct ControlView: View {
-    @ObservedObject var viewModel: MainViewModel
-    
-    var body: some View {
-        HStack {
-            Spacer()
-            
-            Button {
-                viewModel.locationButtonTapped()
-            } label: {
-                Image(systemName: "location.circle.fill")
-                    .resizable()
-                    .frame(width: 36, height: 36)
-                    .foregroundStyle(.orange)
-                    .background(.white)
-            }
-            .clipShape(.circle)
-        }
+  let locationButtonDidTap: () -> Void
+
+  var body: some View {
+    HStack {
+      Spacer()
+      
+      Button(action: locationButtonDidTap) {
+        Image(systemName: "location.circle.fill")
+          .resizable()
+          .frame(width: 36, height: 36)
+          .foregroundStyle(.orange)
+          .background(.white)
+      }
+      .clipShape(.circle)
     }
+  }
 }
 
 #Preview {
-    ControlView(viewModel: MainViewModel())
-        .padding(16)
+  ControlView {
+    print("location button tapped")
+  }
+  .padding(16)
 }
