@@ -10,6 +10,7 @@ import SwiftUI
 struct RootView: View {
   var body: some View {
     MainView(
+      motionViewModel: MotionViewModel(),
       mapViewModel: MapViewModel(
         locationService: DependencyContainer.shared.locationService
       ),

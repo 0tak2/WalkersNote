@@ -10,9 +10,10 @@ import MapKit
 import SwiftUI
 
 struct MainView: View {
-  @StateObject var viewModel = MainViewModel()
+  @State var motionViewModel: MotionViewModel
   @State var mapViewModel: MapViewModel
   @State var weatherViewModel: WeatherViewModel
+  @State var presentBottomSheet: Bool = false
   let bottomSheetHeightRatio = 0.4
 
   var body: some View {
@@ -33,7 +34,7 @@ struct MainView: View {
       VStack {
         HeaderView(
           parameters: .init(
-            stepCounts: viewModel.stepCount,
+            stepCounts: motionViewModel.stepCount,
             currentAddress: mapViewModel.currentAddress,
             currentWeather: weatherViewModel.lastWeather?.currentWeather,
             temperatureLabelText: weatherViewModel.temperatureLabelText,
@@ -53,13 +54,13 @@ struct MainView: View {
           .padding(16)
           .padding(
             .bottom,
-            viewModel.presentBottomSheet
+            presentBottomSheet
               ? UIScreen.main.bounds.height * bottomSheetHeightRatio
               : 0
           )
-          .animation(.bouncy, value: viewModel.presentBottomSheet)
+          .animation(.bouncy, value: presentBottomSheet)
 
-        if !viewModel.presentBottomSheet {
+        if !presentBottomSheet {
           bottomSheetHandleView
         }
       }
@@ -76,7 +77,7 @@ struct MainView: View {
     .sheet(isPresented: $weatherViewModel.showWeatherKitLegalPage) {
       SafariView(url: weatherViewModel.weatherKitLegalUrl!)
     }
-    .sheet(isPresented: $viewModel.presentBottomSheet) {
+    .sheet(isPresented: $presentBottomSheet) {
       Text("Bottom Sheet")
         .presentationDetents([.fraction(bottomSheetHeightRatio), .large])
         .presentationBackgroundInteraction(.enabled)
@@ -102,7 +103,7 @@ struct MainView: View {
       DragGesture()
         .onEnded({ gesture in
           if gesture.translation.height < 0 {
-            viewModel.presentBottomSheet = true
+            presentBottomSheet = true
           }
         })
     )
@@ -113,6 +114,7 @@ struct MainView: View {
   @Previewable @State var locationService = LocationService()
   
   MainView(
+    motionViewModel: MotionViewModel(),
     mapViewModel: MapViewModel(locationService: locationService),
     weatherViewModel: WeatherViewModel(locationService: locationService)
   )
