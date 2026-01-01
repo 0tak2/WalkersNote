@@ -12,6 +12,8 @@ struct ControlView: View {
 
   var body: some View {
     HStack {
+      Spacer()
+      
       Button(action: locationButtonDidTap) {
         Image(systemName: "location.circle.fill")
           .resizable()
