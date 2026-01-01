@@ -14,7 +14,7 @@ import WeatherKit
 final class MainViewModel: NSObject, ObservableObject {
     private let locationManager: CLLocationManager
     private static let fallbackCoordinator = CLLocationCoordinate2D(latitude: 37.571648599, longitude: 126.976372775)
-    private var cameraPositionPreapred = false
+    private var cameraPositionPrepared = false
     
     private let pedometer = CMPedometer()
     
@@ -37,10 +37,10 @@ final class MainViewModel: NSObject, ObservableObject {
     
     @Published var currentLocation: CLLocation? {
         didSet {
-            if !cameraPositionPreapred,
+            if !cameraPositionPrepared,
                let currentLocation = currentLocation {
                 cameraPosition = MapCameraPosition.region(MKCoordinateRegion(center: currentLocation.coordinate, span: currentCameraSpan))
-                cameraPositionPreapred.toggle()
+                cameraPositionPrepared.toggle()
             }
         }
     }
