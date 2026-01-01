@@ -52,6 +52,10 @@ final class WeatherViewModel {
       }
     }
   }
+  
+  deinit {
+    locationUpdateTask?.cancel()
+  }
 }
 
 extension WeatherViewModel {
