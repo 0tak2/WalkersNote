@@ -11,7 +11,8 @@ import SwiftUI
 
 struct MainView: View {
   @StateObject var viewModel = MainViewModel()
-  @State var mapViewModel = MapViewModel()
+  @State var mapViewModel: MapViewModel
+  @State var weatherViewModel: WeatherViewModel
   let bottomSheetHeightRatio = 0.4
 
   var body: some View {
@@ -34,12 +35,12 @@ struct MainView: View {
           parameters: .init(
             stepCounts: viewModel.stepCount,
             currentAddress: mapViewModel.currentAddress,
-            currentWeather: viewModel.lastWeather?.currentWeather,
-            temperatureLabelText: viewModel.temperatureLabelText,
-            weatherKitLightImageUrl: viewModel.weatherKitLightImageUrl,
-            weatherKitDarkImageUrl: viewModel.weatherKitDarkImageUrl
+            currentWeather: weatherViewModel.lastWeather?.currentWeather,
+            temperatureLabelText: weatherViewModel.temperatureLabelText,
+            weatherKitLightImageUrl: weatherViewModel.weatherKitLightImageUrl,
+            weatherKitDarkImageUrl: weatherViewModel.weatherKitDarkImageUrl
           ),
-          weatherKitIconDidTap: viewModel.weatherImageTapped
+          weatherKitIconDidTap: weatherViewModel.weatherImageTapped
         )
         .frame(height: 180)
         .padding(.init(top: 16, leading: 16, bottom: 0, trailing: 16))
@@ -72,11 +73,8 @@ struct MainView: View {
       }
     }
     .ignoresSafeArea(.all, edges: .bottom)
-    .onAppear {
-      viewModel.viewAppeared()
-    }
-    .sheet(isPresented: $viewModel.showWeatherKitLegalPage) {
-      SafariView(url: viewModel.weatherKitLegalUrl!)
+    .sheet(isPresented: $weatherViewModel.showWeatherKitLegalPage) {
+      SafariView(url: weatherViewModel.weatherKitLegalUrl!)
     }
     .sheet(isPresented: $viewModel.presentBottomSheet) {
       Text("Bottom Sheet")
@@ -112,5 +110,10 @@ struct MainView: View {
 }
 
 #Preview {
-  MainView()
+  @Previewable @State var locationService = LocationService()
+  
+  MainView(
+    mapViewModel: MapViewModel(locationService: locationService),
+    weatherViewModel: WeatherViewModel(locationService: locationService)
+  )
 }

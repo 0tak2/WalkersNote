@@ -57,7 +57,7 @@ final class MapViewModel {
   private var authStateUpdateTask: Task<Void, Never>?
   private var addressUpdateTask: Task<Void, Never>?
 
-  init(locationService: LocationService = LocationService()) {
+  init(locationService: LocationService) {
     self.locationService = locationService
     self.authState = locationService.locationAuthState
     
