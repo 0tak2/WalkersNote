@@ -15,6 +15,7 @@ final class LocationService: NSObject {
   private(set) var currentLocation: CLLocation? {
     didSet {
       guard let currentLocation else { return }
+      updateLocationHook(for: currentLocation)
       locationContinuation.yield(currentLocation)
     }
   }
@@ -40,9 +41,10 @@ final class LocationService: NSObject {
   private let locationAuthContinuation:
     AsyncStream<LocationAuthorizationState>.Continuation
 
-  // MARK: 타이머
+  // MARK: 타이머, 태스크
   private var updateLocationTimer: Timer?
-
+  private var updateLocationHookTask: Task<Void, Never>?
+  
   init(locationManager: CLLocationManager = CLLocationManager()) {
     self.locationManager = locationManager
 
@@ -74,6 +76,7 @@ final class LocationService: NSObject {
 
   deinit {
     updateLocationTimer?.invalidate()
+    updateLocationHookTask?.cancel()
   }
 }
 
@@ -91,9 +94,11 @@ extension LocationService {
     }
   }
   
-  private func updateLocation(for location: CLLocation) {
-    currentLocation = location
-    Task {
+  private func updateLocationHook(for location: CLLocation) {
+    updateLocationHookTask?.cancel()
+    updateLocationHookTask = nil
+    
+    updateLocationHookTask = Task {
       await updateAddress(for: location)
     }
   }
