@@ -30,9 +30,19 @@ struct MainView: View {
       }
 
       VStack {
-        HeaderView(viewModel: viewModel)
-          .frame(height: 180)
-          .padding(.init(top: 16, leading: 16, bottom: 0, trailing: 16))
+        HeaderView(
+          parameters: .init(
+            stepCounts: viewModel.stepCount,
+            currentAddress: mapViewModel.currentAddress,
+            currentWeather: viewModel.lastWeather?.currentWeather,
+            temperatureLabelText: viewModel.temperatureLabelText,
+            weatherKitLightImageUrl: viewModel.weatherKitLightImageUrl,
+            weatherKitDarkImageUrl: viewModel.weatherKitDarkImageUrl
+          ),
+          weatherKitIconDidTap: viewModel.weatherImageTapped
+        )
+        .frame(height: 180)
+        .padding(.init(top: 16, leading: 16, bottom: 0, trailing: 16))
 
         Spacer()
 
@@ -54,7 +64,7 @@ struct MainView: View {
       }
 
       if mapViewModel.currentLocation == nil
-        && mapViewModel.coreLocationUnauthorized
+        && mapViewModel.authState == .notAuthorized
       {
         ToastMessageView(
           message: "위치를 알 수 없습니다.\n설정 - 앱 - 산책자노트에서 위치 권한을 확인해주세요."
@@ -64,7 +74,6 @@ struct MainView: View {
     .ignoresSafeArea(.all, edges: .bottom)
     .onAppear {
       viewModel.viewAppeared()
-      mapViewModel.viewAppeared()
     }
     .sheet(isPresented: $viewModel.showWeatherKitLegalPage) {
       SafariView(url: viewModel.weatherKitLegalUrl!)
