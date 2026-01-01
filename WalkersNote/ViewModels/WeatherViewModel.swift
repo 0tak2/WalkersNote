@@ -51,6 +51,13 @@ final class WeatherViewModel {
         await self?.updateWeather(for: location)
       }
     }
+    
+    Task { @MainActor in
+        let weatherKitAttribution = try? await weatherService.attribution
+        weatherKitLightImageUrl = weatherKitAttribution?.combinedMarkLightURL
+        weatherKitDarkImageUrl = weatherKitAttribution?.combinedMarkDarkURL
+        weatherKitLegalUrl = weatherKitAttribution?.legalPageURL
+    }
   }
   
   deinit {
