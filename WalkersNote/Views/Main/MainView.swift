@@ -5,6 +5,7 @@
 //  Created by 임영택 on 3/9/25.
 //
 
+import ComposableArchitecture
 import CoreLocation
 import MapKit
 import SwiftUI
@@ -12,9 +13,20 @@ import SwiftUI
 struct MainView: View {
   @State var motionViewModel: MotionViewModel
   @State var mapViewModel: MapViewModel
-  @State var weatherViewModel: WeatherViewModel
   @State var presentBottomSheet: Bool = false
   let bottomSheetHeightRatio = 0.4
+  
+  @Bindable var weatherStore: StoreOf<WeatherFeature>
+  
+  var temperatureLabelText: String {
+    guard let currentWeather = weatherStore.lastWeather?.currentWeather else {
+      return ""
+    }
+    
+    let temp = currentWeather.temperature
+    let roundedTemp = Int(round(temp.value * 10) / 10)
+    return "\(roundedTemp)\(temp.unit.symbol)"
+  }
 
   var body: some View {
     ZStack {
@@ -36,12 +48,14 @@ struct MainView: View {
           parameters: .init(
             stepCounts: motionViewModel.stepCount,
             currentAddress: mapViewModel.currentAddress,
-            currentWeather: weatherViewModel.lastWeather?.currentWeather,
-            temperatureLabelText: weatherViewModel.temperatureLabelText,
-            weatherKitLightImageUrl: weatherViewModel.weatherKitLightImageUrl,
-            weatherKitDarkImageUrl: weatherViewModel.weatherKitDarkImageUrl
+            currentWeather: weatherStore.lastWeather?.currentWeather,
+            temperatureLabelText: temperatureLabelText,
+            weatherKitLightImageUrl: weatherStore.weatherKitLegalInformation?.lightImageUrl,
+            weatherKitDarkImageUrl: weatherStore.weatherKitLegalInformation?.darkImageUrl
           ),
-          weatherKitIconDidTap: weatherViewModel.weatherImageTapped
+          weatherKitIconDidTap: {
+            weatherStore.send(.weatherKitLogoTapped)
+          }
         )
         .frame(height: 180)
         .padding(.init(top: 16, leading: 16, bottom: 0, trailing: 16))
@@ -74,8 +88,15 @@ struct MainView: View {
       }
     }
     .ignoresSafeArea(.all, edges: .bottom)
-    .sheet(isPresented: $weatherViewModel.showWeatherKitLegalPage) {
-      SafariView(url: weatherViewModel.weatherKitLegalUrl!)
+    .onAppear {
+      weatherStore.send(.onAppear)
+    }
+    .sheet(
+      item: $weatherStore.scope(state: \.legalSheetState, action: \.legalSheetState)
+    ) { _ in
+      SafariView(
+        url: weatherStore.weatherKitLegalInformation?.legalPageURL ?? URL(string: "https://www.apple.com")!
+      )
     }
     .sheet(isPresented: $presentBottomSheet) {
       Text("Bottom Sheet")
@@ -111,11 +132,13 @@ struct MainView: View {
 }
 
 #Preview {
-  @Previewable @State var locationService = LocationService()
+  @Previewable @State var locationService = LocationService(locationManager: CLLocationManager())
   
   MainView(
     motionViewModel: MotionViewModel(),
     mapViewModel: MapViewModel(locationService: locationService),
-    weatherViewModel: WeatherViewModel(locationService: locationService)
+    weatherStore: Store(initialState: WeatherFeature.State()) {
+      WeatherFeature()
+    }
   )
 }
