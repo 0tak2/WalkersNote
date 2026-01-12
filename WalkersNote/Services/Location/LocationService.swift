@@ -5,11 +5,12 @@
 //  Created by 임영택 on 1/1/26.
 //
 
+import ComposableArchitecture
 import CoreLocation
 import Foundation
 
 final class LocationService: NSObject {
-  private let locationManager: CLLocationManager
+  private let locationManager: LocationManagerProtocol
 
   // MARK: 현재 위치
   private(set) var currentLocation: CLLocation? {
@@ -45,7 +46,7 @@ final class LocationService: NSObject {
   private var updateLocationTimer: Timer?
   private var updateLocationHookTask: Task<Void, Never>?
   
-  init(locationManager: CLLocationManager = CLLocationManager()) {
+  init(locationManager: LocationManagerProtocol) {
     self.locationManager = locationManager
 
     let (locationStream, locationContinuation) = AsyncStream.makeStream(
@@ -134,5 +135,18 @@ extension LocationService: CLLocationManagerDelegate {
     if let location = locations.last {
       currentLocation = location
     }
+  }
+}
+
+extension LocationService: DependencyKey {
+  static var liveValue: LocationService {
+    LocationService(locationManager: CLLocationManager())
+  }
+}
+
+extension DependencyValues {
+  var locationService: LocationService {
+    get { self[LocationService.self] }
+    set { self[LocationService.self] = newValue }
   }
 }
